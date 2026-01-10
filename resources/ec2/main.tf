@@ -2,19 +2,15 @@
 # EC2
 resource "aws_instance" "web_server" {
   ami                         = "ami-000322c84e9ff1be2" #Amazon Linux 2 (ap-ne-1)
-  instance_type               = "t3.micro"
-  key_name                    = data.aws_key_pair.deployment_key.key_name
+  instance_type               = var.ec2_instance_type
+  key_name                    = aws_key_pair.deployment_key.key_name
   subnet_id                   = var.web_subnet_id
   vpc_security_group_ids      = [aws_security_group.web_sg.id]
   associate_public_ip_address = true
 
   user_data = <<EOF
     #!/bin/bash
-    
-    # Update the system
     sudo yum update -y
-
-    # Install Git
     sudo yum install -y git
 
     # Install Docker and Docker Compose
@@ -79,20 +75,13 @@ resource "aws_security_group" "web_sg" {
 }
 
 # EC2 SSH Key
-data "aws_key_pair" "deployment_key" { # Manually created on aws console
+resource "aws_key_pair" "deployment_key" {
   key_name = "github_workflow_key"
+  public_key = var.ec2_public_key
+
   tags = {
     Name    = "${var.project_name}_ec2_deployment_key"
     Environment = var.environment_name
   }
 }
 
-# # EC2 Elastic IP : Set static IP address
-# resource "aws_eip" "web_eip" {
-#   instance = aws_instance.web_server.id
-#   domain   = "vpc"
-#   tags = {
-#     Name = "${var.project_name}_ec2_eip"
-#     Environment = var.environment_name  
-#   }
-# }

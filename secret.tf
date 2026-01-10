@@ -35,12 +35,6 @@ resource "github_actions_environment_secret" "db_connection_url" {
   secret_name     = "DB_URL"
   plaintext_value = format("jdbc:postgresql://%s/%s", module.rds.db_endpoint, var.db_schema)
 }
-resource "github_actions_environment_secret" "jwt_secret" {
-  repository      = data.github_repository.repo.name
-  environment     = github_repository_environment.repo_env.environment
-  secret_name     = "JWT_SECRET"
-  plaintext_value = var.jwt_secret
-}
 
 # AWS Credentials
 resource "github_actions_environment_secret" "aws_access_key_id" {

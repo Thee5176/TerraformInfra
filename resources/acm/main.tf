@@ -1,18 +1,26 @@
 # SSL Certificates - Using manually imported ACM certificate by domain
-data "aws_acm_certificate" "my_ssl_cert" {
-  domain      = var.domain_name
-  types       = ["IMPORTED"]
-  statuses    = ["ISSUED"]
-  most_recent = true
+resource "tls_private_key" "ssl_key_pair" {
+  algorithm = "RSA"
 }
 
-# Route53 Hosted Zone
-resource "aws_route53_zone" "main" {
-  name = var.domain_name
+resource "tls_self_signed_cert" "self_signed_cert" {
+  private_key_pem = tls_private_key.ssl_key_pair.private_key_pem
 
-  tags = {
-    Name        = "${var.project_name}-${var.environment_name}-hosted-zone"
-    Project     = var.project_name
-    Environment = var.environment_name
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
   }
+
+  validity_period_hours = 12
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "aws_acm_certificate" "my_ssl_cert" {
+  private_key      = tls_private_key.ssl_key_pair.private_key_pem
+  certificate_body = tls_self_signed_cert.self_signed_cert.cert_pem
 }

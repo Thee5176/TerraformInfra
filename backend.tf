@@ -4,7 +4,7 @@ terraform {
     organization = "thee5176"
 
     workspaces {
-      name = "Accounting_CQRS_Dev"
+      name = "AccountingInfra"
     }
   }
   required_providers {
@@ -22,5 +22,5 @@ terraform {
     }
   }
 
-  required_version = ">= 1.13.0"
+  required_version = ">= 1.14.3"
 }

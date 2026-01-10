@@ -39,11 +39,6 @@ variable "db_schema" {
   default     = "record"
 }
 
-variable "jwt_secret" {
-  description = "Secret key for signing JWT tokens"
-  type        = string
-  sensitive   = true
-}
 variable "github_owner" {
   description = "GitHub repository owner"
   type        = string
@@ -79,6 +74,17 @@ variable "ec2_private_key" {
   sensitive   = true
 }
 
+variable "ec2_instance_type" {
+  description = "EC2 instance type"
+  type        = string
+  default     = "t3.nano"
+}
+
+variable "ec2_public_key" {
+  description = "SSH Public Key for EC2 instance access"
+  type        = string
+}
+
 variable "working_directory" {
   description = "Working directory for the project"
   type        = string
@@ -104,18 +110,15 @@ variable "domain_name" {
 variable "auth0_domain" {
   description = "Auth0 domain for authentication"
   type        = string
-  default     = "dev-ps2b4tn12sg823uw.us.auth0.com"
 }
 
 variable "auth0_audience" {
   description = "Auth0 audience for authentication"
   type        = string
-  default     = "https://dev-ps2b4tn12sg823uw.us.auth0.com/api/v2/"
 }
 variable "auth0_client_id" {
   description = "Auth0 client ID for authentication"
   type        = string
-  default     = "b40loEEHHYu6z9OQQHItaEdwRANnfmPF"
 }
 variable "auth0_client_secret" {
   description = "Auth0 client secret for authentication"
