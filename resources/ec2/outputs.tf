@@ -1,7 +1,7 @@
 
 output "ec2_public_ip" {
-	description = "Public IP address of the web server"
-	value       = aws_instance.web_server.public_ip
+	description = "IPv6 address of the web server"
+	value       = length(aws_instance.web_server.ipv6_addresses) > 0 ? aws_instance.web_server.ipv6_addresses[0] : null
 }
 
 output "web_sg_id" {

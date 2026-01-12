@@ -1,31 +1,63 @@
+# Data source to fetch the correct Ubuntu 22.04 LTS ARM64 AMI for the current region
+data "aws_ami" "ubuntu_arm64" {
+  most_recent = true
+  owners      = ["099720109477"] # Canonical
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
 ##------------------------EC2 Instance---------------------------
 # EC2
 resource "aws_instance" "web_server" {
-  ami                         = "ami-000322c84e9ff1be2" #Amazon Linux 2 (ap-ne-1)
+  ami                         = data.aws_ami.ubuntu_arm64.id # Ubuntu 22.04 LTS ARM64
   instance_type               = var.ec2_instance_type
   key_name                    = aws_key_pair.deployment_key.key_name
   subnet_id                   = var.web_subnet_id
   vpc_security_group_ids      = [aws_security_group.web_sg.id]
   associate_public_ip_address = true
 
-  user_data = <<EOF
+  user_data = <<-EOF
     #!/bin/bash
-    sudo yum update -y
-    sudo yum install -y git
+    set -e  # Exit on any error
+    
+    exec > /tmp/user_data.log 2>&1  # Capture all output to log file
+    echo "=== Starting user_data script ===" 
+    
+    echo "=== Updating system ===" 
+    apt-get update -y
+    apt-get install -y git
+    
+    echo "=== Installing Docker ===" 
+    curl -fsSL https://get.docker.com | sh
+    usermod -aG docker ubuntu
 
-    # Install Docker and Docker Compose
-    sudo yum install -y docker
-    sudo service docker start
-    sudo usermod -a -G docker ec2-user
+    echo "=== Installing Docker Compose ===" 
+    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+    chmod +x /usr/local/bin/docker-compose
+    ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+
+    echo "=== Starting Docker service ===" 
+    systemctl start docker
+    systemctl enable docker
+
+    echo "=== Verifying installations ===" 
+    git --version
     docker --version
-
-    sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
-    sudo chmod +x /usr/local/bin/docker-compose
     docker-compose --version
 
-    # Clone the repository and checkout the docker directory
-    git clone --recurse-submodules -j3 https://github.com/Thee5176/Accounting_CQRS_Project.git
+    echo "=== Cloning repository ===" 
+    cd /home/ubuntu
+    sudo -u ubuntu git clone --recurse-submodules -j3 https://github.com/Thee5176/Accounting_CQRS_Project.git
     
+    echo "=== User data script completed successfully ===" 
   EOF
 
   tags = {
@@ -65,7 +97,7 @@ resource "aws_security_group" "web_sg" {
     from_port        = 0
     to_port          = 0
     protocol         = "-1"
-    ipv6_cidr_blocks = ["::/0"]
+    cidr_blocks      = ["0.0.0.0/0"]
   }
 }
 
