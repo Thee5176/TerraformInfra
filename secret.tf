@@ -33,7 +33,7 @@ resource "github_actions_environment_secret" "db_connection_url" {
   repository      = data.github_repository.repo.name
   environment     = github_repository_environment.repo_env.environment
   secret_name     = "DB_URL"
-  plaintext_value = format("jdbc:postgresql://%s/%s", module.rds.db_endpoint, var.db_schema)
+  plaintext_value = format("jdbc:postgresql://%s/%s", var.db_endpoint, var.db_schema)
 }
 
 # AWS Credentials

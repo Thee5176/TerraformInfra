@@ -23,6 +23,16 @@ variable "ec2_instance_id" {
     type        = string
 }
 
+variable "command_service_port" {
+  description = "Port for the Command Service"
+  type        = number
+}
+variable "query_service_port" {
+  description = "Port for the Query Service"
+  type        = number
+}
+
+
 variable "domain_name" {
     description = "Domain name for the application load balancer"
     type        = string

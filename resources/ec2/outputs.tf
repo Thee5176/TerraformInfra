@@ -13,3 +13,8 @@ output "ec2_instance_id"{
 	description = "Instance id of the web server"
 	value       = aws_instance.web_server.id
 }
+
+output "ec2_ipv6_address" {
+	description = "IPv6 address of the web server"
+	value       = length(aws_instance.web_server.ipv6_addresses) > 0 ? aws_instance.web_server.ipv6_addresses[0] : null
+}

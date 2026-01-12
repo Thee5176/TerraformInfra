@@ -24,7 +24,6 @@ variable "aws_secret_key" {
 variable "db_username" {
   description = "RDS root username for the database"
   type        = string
-  default     = "db_master"
 }
 
 variable "db_password" {
@@ -36,7 +35,11 @@ variable "db_password" {
 variable "db_schema" {
   description = "RDS database name to be created."
   type        = string
-  default     = "record"
+}
+
+variable "db_endpoint" {
+  description = "RDS database endpoint"
+  type        = string
 }
 
 variable "github_owner" {
