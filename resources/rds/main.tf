@@ -92,12 +92,12 @@ resource "aws_security_group" "db_sg" {
 # }
 
 # Ingress Rules
-resource "aws_security_group_rule" "ec2_to_rds_ingress" {
-  type                     = "ingress"
-  description              = "Allow DB access from anywhere web servers"
-  from_port                = 5432
-  to_port                  = 5432
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.db_sg.id
-  source_security_group_id = var.web_sg_id
-} 
+# resource "aws_security_group_rule" "ec2_to_rds_ingress" {
+#   type                     = "ingress"
+#   description              = "Allow DB access from anywhere web servers"
+#   from_port                = 5432
+#   to_port                  = 5432
+#   protocol                 = "tcp"
+#   security_group_id        = aws_security_group.db_sg.id
+#   source_security_group_id = var.web_sg_id
+# } 
