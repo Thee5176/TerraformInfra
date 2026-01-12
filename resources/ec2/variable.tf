@@ -8,6 +8,11 @@ variable "environment_name" {
     type        = string
 }
 
+variable "ec2_instance_type" {
+  description = "EC2 instance type"
+  type        = string
+}
+
 variable "command_service_port" {
   description = "Port for the Command Service"
   type        = number
@@ -24,5 +29,10 @@ variable "vpc_id" {
 
 variable "web_subnet_id" {
   description = "Subnet id for EC2 instance"
+  type        = string
+}
+
+variable "ec2_public_key" {
+  description = "SSH Public Key for EC2 instance access"
   type        = string
 }

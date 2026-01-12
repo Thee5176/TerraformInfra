@@ -1,49 +1,26 @@
-# # SSL Certificate
-# resource "aws_acm_certificate" "ssl_cert" {
-#   domain_name       = var.domain_name
-#   validation_method = "DNS"
+# SSL Certificates - Using manually imported ACM certificate by domain
+resource "tls_private_key" "ssl_key_pair" {
+  algorithm = "RSA"
+}
 
-#   tags = {
-#       Name = "${var.project_name}_ssl_cert"
-#       Environment = var.environment_name
-#   }
+resource "tls_self_signed_cert" "self_signed_cert" {
+  private_key_pem = tls_private_key.ssl_key_pair.private_key_pem
 
-#   lifecycle {
-#     create_before_destroy = true
-#   }
-# }
+  subject {
+    common_name  = "example.com"
+    organization = "ACME Examples, Inc"
+  }
 
-# resource "aws_route53_zone" "main" {
-#   name         = var.domain_name
-# }
+  validity_period_hours = 12
 
-# locals {
-#   cert_dvos = { for dvo in aws_acm_certificate.ssl_cert.domain_validation_options : dvo.domain_name => dvo }
-# }
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
 
-# # Create DNS validation records returned by ACM
-# resource "aws_route53_record" "cert_validation" {
-#   for_each = local.cert_dvos
-
-#   zone_id = aws_route53_zone.main.zone_id
-#   name    = each.value.resource_record_name
-#   type    = each.value.resource_record_type
-#   ttl     = 60
-#   records = [each.value.resource_record_value]
-# }
-
-# # Validate the ACM certificate using the created Route53 records
-# resource "aws_acm_certificate_validation" "ssl_cert_validation" {
-#   certificate_arn         = aws_acm_certificate.ssl_cert.arn
-#   validation_record_fqdns = [for r in aws_route53_record.cert_validation : r.fqdn]
-
-#   # Ensure certificate is created before validation resource is destroyed/created
-#   lifecycle {
-#     create_before_destroy = true
-#   }
-# }
-
-# # Ensure the ALB listener waits for the certificate validation to complete
-# resource "null_resource" "wait_for_cert_validation" {
-#   depends_on = [aws_acm_certificate_validation.ssl_cert_validation]
-# }
+resource "aws_acm_certificate" "my_ssl_cert" {
+  private_key      = tls_private_key.ssl_key_pair.private_key_pem
+  certificate_body = tls_self_signed_cert.self_signed_cert.cert_pem
+}

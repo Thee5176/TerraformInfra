@@ -24,7 +24,6 @@ variable "aws_secret_key" {
 variable "db_username" {
   description = "RDS root username for the database"
   type        = string
-  default     = "db_master"
 }
 
 variable "db_password" {
@@ -36,14 +35,13 @@ variable "db_password" {
 variable "db_schema" {
   description = "RDS database name to be created."
   type        = string
-  default     = "record"
 }
 
-variable "jwt_secret" {
-  description = "Secret key for signing JWT tokens"
+variable "db_endpoint" {
+  description = "RDS database endpoint"
   type        = string
-  sensitive   = true
 }
+
 variable "github_owner" {
   description = "GitHub repository owner"
   type        = string
@@ -79,6 +77,17 @@ variable "ec2_private_key" {
   sensitive   = true
 }
 
+variable "ec2_instance_type" {
+  description = "EC2 instance type"
+  type        = string
+  default     = "t3.nano"
+}
+
+variable "ec2_public_key" {
+  description = "SSH Public Key for EC2 instance access"
+  type        = string
+}
+
 variable "working_directory" {
   description = "Working directory for the project"
   type        = string
@@ -98,5 +107,24 @@ variable "query_service_port" {
 variable "domain_name" {
   description = "Domain name for ACM certificate and Route53 hosted zone"
   type        = string
-  default     = "CqrsAccountingProject.com"
+  default     = "MyAccountingProject.com"
+}
+
+variable "auth0_domain" {
+  description = "Auth0 domain for authentication"
+  type        = string
+}
+
+variable "auth0_audience" {
+  description = "Auth0 audience for authentication"
+  type        = string
+}
+variable "auth0_client_id" {
+  description = "Auth0 client ID for authentication"
+  type        = string
+}
+variable "auth0_client_secret" {
+  description = "Auth0 client secret for authentication"
+  type        = string
+  sensitive   = true
 }

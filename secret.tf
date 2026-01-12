@@ -19,7 +19,7 @@ resource "github_actions_environment_variable" "ec2_public_ip" {
 resource "github_actions_environment_variable" "db_username" {
   repository    = data.github_repository.repo.name
   environment   = github_repository_environment.repo_env.environment
-  variable_name = "DB_USER"
+  variable_name = "DB_USERNAME"
   value         = var.db_username
 }
 
@@ -33,13 +33,7 @@ resource "github_actions_environment_secret" "db_connection_url" {
   repository      = data.github_repository.repo.name
   environment     = github_repository_environment.repo_env.environment
   secret_name     = "DB_URL"
-  plaintext_value = format("jdbc:postgresql://%s/%s", module.rds.db_endpoint, var.db_schema)
-}
-resource "github_actions_environment_secret" "jwt_secret" {
-  repository      = data.github_repository.repo.name
-  environment     = github_repository_environment.repo_env.environment
-  secret_name     = "JWT_SECRET"
-  plaintext_value = var.jwt_secret
+  plaintext_value = format("jdbc:postgresql://%s/%s", var.db_endpoint, var.db_schema)
 }
 
 # AWS Credentials
@@ -84,4 +78,33 @@ resource "github_actions_environment_secret" "github_token" {
   environment     = github_repository_environment.repo_env.environment
   secret_name     = "EC2_SSH_PRIVATE_KEY"
   plaintext_value = var.ec2_private_key
+}
+
+# Additional Variables and Secret
+resource "github_actions_environment_variable" "auth0_domain" {
+  repository    = data.github_repository.repo.name
+  environment   = github_repository_environment.repo_env.environment
+  variable_name = "AUTH0_DOMAIN"
+  value         = var.auth0_domain
+}
+
+resource "github_actions_environment_variable" "auth0_audience" {
+  repository    = data.github_repository.repo.name
+  environment   = github_repository_environment.repo_env.environment
+  variable_name = "AUTH0_AUDIENCE"
+  value         = var.auth0_audience
+}
+
+resource "github_actions_environment_variable" "auth0_client_id" {
+  repository    = data.github_repository.repo.name
+  environment   = github_repository_environment.repo_env.environment
+  variable_name = "AUTH0_CLIENT_ID"
+  value         = var.auth0_client_id
+}
+
+resource "github_actions_environment_secret" "auth0_client_secret" {
+  repository      = data.github_repository.repo.name
+  environment     = github_repository_environment.repo_env.environment
+  secret_name     = "AUTH0_CLIENT_SECRET"
+  plaintext_value = var.auth0_client_secret
 }

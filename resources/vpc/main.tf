@@ -1,10 +1,11 @@
 ##----------------------------VPC Level--------------------------
 # VPC : define resource group
 resource "aws_vpc" "main_vpc" {
-  cidr_block           = "172.16.0.0/16"
-  instance_tenancy     = "default"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
+  cidr_block                       = "172.16.0.0/16"
+  instance_tenancy                 = "default"
+  enable_dns_support               = true
+  enable_dns_hostnames             = true
+  assign_generated_ipv6_cidr_block  = true
 
   tags = {
     Name    = "${var.project_name}_vpc"
@@ -42,11 +43,20 @@ resource "aws_route" "public_route" {
   route_table_id         = aws_route_table.public_route.id
 }
 
+# IPv6 Route
+resource "aws_route" "public_route_ipv6" {
+  destination_ipv6_cidr_block = "::/0"
+  gateway_id                  = aws_internet_gateway.main_igw.id
+  route_table_id              = aws_route_table.public_route.id
+}
+
 # EC2 Subnet (Private)
 resource "aws_subnet" "web_subnet" {
-  vpc_id            = aws_vpc.main_vpc.id
-  cidr_block        = cidrsubnet(aws_vpc.main_vpc.cidr_block, 8, 10 ) # 172.16.10.0/24
-  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id                          = aws_vpc.main_vpc.id
+  cidr_block                      = cidrsubnet(aws_vpc.main_vpc.cidr_block, 8, 10 ) # 172.16.10.0/24
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.main_vpc.ipv6_cidr_block, 8, 0)
+  availability_zone               = data.aws_availability_zones.available.names[0]
+  assign_ipv6_address_on_creation    = true
 
   tags = {
     Name    = "${var.project_name}_web_subnet"
@@ -63,9 +73,11 @@ resource "aws_subnet" "web_subnet" {
 resource "aws_subnet" "alb_subnet" {
   count = min(length(data.aws_availability_zones.available.names), 2)
 
-  vpc_id            = aws_vpc.main_vpc.id
-  cidr_block        = cidrsubnet(aws_vpc.main_vpc.cidr_block, 8, 40 + count.index) # 172.16.40.0/24, 172.16.41.0/24
-  availability_zone = data.aws_availability_zones.available.names[count.index]
+  vpc_id                          = aws_vpc.main_vpc.id
+  cidr_block                      = cidrsubnet(aws_vpc.main_vpc.cidr_block, 8, 40 + count.index) # 172.16.40.0/24, 172.16.41.0/24
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.main_vpc.ipv6_cidr_block, 8, 10 + count.index)
+  availability_zone               = data.aws_availability_zones.available.names[count.index]
+  assign_ipv6_address_on_creation    = true
 
   tags = {
     Name    = "${var.project_name}_alb_subnet_${count.index + 1}"
@@ -82,9 +94,11 @@ resource "aws_subnet" "alb_subnet" {
 resource "aws_subnet" "db_subnet" {
   count = min(length(data.aws_availability_zones.available.names), 2)
 
-  vpc_id            = aws_vpc.main_vpc.id
-  cidr_block        = cidrsubnet(aws_vpc.main_vpc.cidr_block, 8, 60 + count.index) # 172.16.60.0/24, 172.16.61.0/24
-  availability_zone = data.aws_availability_zones.available.names[count.index]
+  vpc_id                          = aws_vpc.main_vpc.id
+  cidr_block                      = cidrsubnet(aws_vpc.main_vpc.cidr_block, 8, 60 + count.index) # 172.16.60.0/24, 172.16.61.0/24
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.main_vpc.ipv6_cidr_block, 8, 20 + count.index)
+  availability_zone               = data.aws_availability_zones.available.names[count.index]
+  assign_ipv6_address_on_creation    = true
 
   tags = {
     Name    = "${var.project_name}_db_subnet_${count.index + 1}"
@@ -98,7 +112,6 @@ resource "aws_subnet" "db_subnet" {
 }
 
 
-#TODO : later remove and turn into private subnet -> access through alb public subnet only
 # Public Table Association : connect EC2 subnet with public route table
 resource "aws_route_table_association" "public_subnet_association" {
   subnet_id      = aws_subnet.web_subnet.id
