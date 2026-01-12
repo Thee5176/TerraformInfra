@@ -112,7 +112,6 @@ resource "aws_subnet" "db_subnet" {
 }
 
 
-#TODO : later remove and turn into private subnet -> access through alb public subnet only
 # Public Table Association : connect EC2 subnet with public route table
 resource "aws_route_table_association" "public_subnet_association" {
   subnet_id      = aws_subnet.web_subnet.id

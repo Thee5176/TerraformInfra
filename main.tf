@@ -19,7 +19,6 @@ module "ec2" {
 
   vpc_id               = module.vpc.vpc_id
   web_subnet_id        = module.vpc.web_subnet_id
-  ec2_public_key       = var.ec2_public_key
 }
 
 module "acm" {
