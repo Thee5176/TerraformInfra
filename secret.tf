@@ -16,25 +16,25 @@ resource "github_actions_environment_variable" "ec2_public_ip" {
 }
 
 # Backend Database Secrets
-# resource "github_actions_environment_variable" "db_username" {
-#   repository    = data.github_repository.repo.name
-#   environment   = github_repository_environment.repo_env.environment
-#   variable_name = "DB_USER"
-#   value         = var.db_username
-# }
+resource "github_actions_environment_variable" "db_username" {
+  repository    = data.github_repository.repo.name
+  environment   = github_repository_environment.repo_env.environment
+  variable_name = "DB_USERNAME"
+  value         = var.db_username
+}
 
-# resource "github_actions_environment_secret" "db_password" {
-#   repository      = data.github_repository.repo.name
-#   environment     = github_repository_environment.repo_env.environment
-#   secret_name     = "DB_PASSWORD"
-#   plaintext_value = var.db_password
-# }
-# resource "github_actions_environment_secret" "db_connection_url" {
-#   repository      = data.github_repository.repo.name
-#   environment     = github_repository_environment.repo_env.environment
-#   secret_name     = "DB_URL"
-#   plaintext_value = format("jdbc:postgresql://%s/%s", module.rds.db_endpoint, var.db_schema)
-# }
+resource "github_actions_environment_secret" "db_password" {
+  repository      = data.github_repository.repo.name
+  environment     = github_repository_environment.repo_env.environment
+  secret_name     = "DB_PASSWORD"
+  plaintext_value = var.db_password
+}
+resource "github_actions_environment_secret" "db_connection_url" {
+  repository      = data.github_repository.repo.name
+  environment     = github_repository_environment.repo_env.environment
+  secret_name     = "DB_URL"
+  plaintext_value = format("jdbc:postgresql://%s/%s", var.db_endpoint, var.db_schema)
+}
 
 # AWS Credentials
 resource "github_actions_environment_secret" "aws_access_key_id" {

@@ -19,3 +19,8 @@ resource "tls_self_signed_cert" "self_signed_cert" {
     "server_auth",
   ]
 }
+
+resource "aws_acm_certificate" "my_ssl_cert" {
+  private_key      = tls_private_key.ssl_key_pair.private_key_pem
+  certificate_body = tls_self_signed_cert.self_signed_cert.cert_pem
+}
