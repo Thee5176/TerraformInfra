@@ -1,56 +1,34 @@
-# Data source to fetch the correct Ubuntu 22.04 LTS ARM64 AMI for the current region
-data "aws_ami" "ubuntu_arm64" {
-  most_recent = true
-  owners      = ["099720109477"] # Canonical
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
-##------------------------EC2 Instance---------------------------
 # EC2
 resource "aws_instance" "web_server" {
-  ami                         = data.aws_ami.ubuntu_arm64.id # Ubuntu 22.04 LTS ARM64
+  ami                         = var.ec2_ami_id
   instance_type               = var.ec2_instance_type
   key_name                    = aws_key_pair.deployment_key.key_name
+  iam_instance_profile        = aws_iam_instance_profile.ec2_ssm_profile.name
   subnet_id                   = var.web_subnet_id
   vpc_security_group_ids      = [aws_security_group.web_sg.id]
   associate_public_ip_address = true
-  iam_instance_profile        = aws_iam_instance_profile.ec2_ssm_profile.name
+  user_data_replace_on_change = true
 
-  user_data_base64 = base64encode(<<EOF
+  user_data_base64 = base64encode(<<-EOF
     #!/bin/bash
     set -e  # Exit on any error
     
     echo "=== Updating system ===" 
     apt-get update -y
     apt-get install -y git
-    
-    echo "=== Installing Docker from Official Repository ===" 
-    sudo apt update
-    sudo apt install ca-certificates curl
-    sudo install -m 0755 -d /etc/apt/keyrings
-    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
-    sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-    echo "=== Adding ubuntu user to docker group ===" 
+    curl -fsSL https://get.docker.com | sh
+    apt-get install -y docker
+    sudo addgroup docker
     usermod -aG docker ubuntu
+    systemctl enable docker
+    systemctl start docker
+    apt-get -y install docker-compose-plugin
     
-    echo "=== Reloading systemd and restarting Docker ===" 
+    echo "=== Enabling and starting Docker service ==="
+    sudo systemctl enable docker
     sudo systemctl start docker
     sudo systemctl status docker
-
-    echo "=== Installing Docker Compose ===" 
-    curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-    chmod +x /usr/local/bin/docker-compose
-    ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
 
     echo "=== Verifying installations ===" 
     git --version
@@ -61,8 +39,10 @@ resource "aws_instance" "web_server" {
     cd /home/ubuntu
     git clone --recurse-submodules -j3 https://github.com/Thee5176/Accounting_CQRS_Project.git
     
+    set +e  # Disable exit on error for the next commands
+
     echo "=== User data script completed successfully ===" 
-  EOF
+    EOF
   )
 
   tags = {

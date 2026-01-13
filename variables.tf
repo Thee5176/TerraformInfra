@@ -77,10 +77,16 @@ variable "ec2_private_key" {
   sensitive   = true
 }
 
+variable "ec2_ami_id" {
+  description = "AMI ID for the EC2 instance"
+  type        = string
+  default     = "ami-0aec5ae807cea9ce0" # Ubuntu 24.04 LTS-AMD for ap-northeast-1
+}
+
 variable "ec2_instance_type" {
   description = "EC2 instance type"
   type        = string
-  default     = "t4g.nano"
+  default     = "t3a.nano"
 }
 
 variable "ec2_public_key" {

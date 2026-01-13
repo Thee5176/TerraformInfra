@@ -12,6 +12,7 @@ module "ec2" {
   project_name     = var.project_name
   environment_name = var.environment_name
 
+  ec2_ami_id           = var.ec2_ami_id
   ec2_instance_type    = var.ec2_instance_type
   ec2_public_key       = var.ec2_public_key
   command_service_port = var.command_service_port
