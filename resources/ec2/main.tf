@@ -23,8 +23,9 @@ resource "aws_instance" "web_server" {
   subnet_id                   = var.web_subnet_id
   vpc_security_group_ids      = [aws_security_group.web_sg.id]
   associate_public_ip_address = true
+  iam_instance_profile        = aws_iam_instance_profile.ec2_ssm_profile.name
 
-  user_data = <<-EOF
+  user_data_base64 = base64encode(<<-EOF
     #!/bin/bash
     set -e  # Exit on any error
     
@@ -34,6 +35,13 @@ resource "aws_instance" "web_server" {
     echo "=== Updating system ===" 
     apt-get update -y
     apt-get install -y git
+    
+    echo "=== Attempting to install SSM Agent ===" 
+    apt-get install -y amazon-ssm-agent || echo "SSM Agent not available in this region/architecture, skipping"
+    
+    echo "=== Starting SSM Agent if available ===" 
+    systemctl start amazon-ssm-agent 2>/dev/null || echo "SSM Agent service not available"
+    systemctl enable amazon-ssm-agent 2>/dev/null || echo "SSM Agent service not available"
     
     echo "=== Installing Docker ===" 
     curl -fsSL https://get.docker.com | sh
@@ -59,6 +67,7 @@ resource "aws_instance" "web_server" {
     
     echo "=== User data script completed successfully ===" 
   EOF
+  )
 
   tags = {
     Name    = "${var.project_name}_ec2_instance"
@@ -114,5 +123,40 @@ resource "aws_key_pair" "deployment_key" {
     Name    = "${var.project_name}_ec2_deployment_key"
     Environment = var.environment_name
   }
+}
+
+# IAM Role for EC2 to use SSM Session Manager
+resource "aws_iam_role" "ec2_ssm_role" {
+  name = "${var.project_name}-ec2-ssm-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name    = "${var.project_name}_ec2_ssm_role"
+    Environment = var.environment_name
+  }
+}
+
+# Attach the AmazonSSMManagedInstanceCore policy
+resource "aws_iam_role_policy_attachment" "ssm_policy" {
+  role       = aws_iam_role.ec2_ssm_role.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+# Instance Profile for the IAM Role
+resource "aws_iam_instance_profile" "ec2_ssm_profile" {
+  name = "${var.project_name}-ec2-ssm-profile"
+  role = aws_iam_role.ec2_ssm_role.name
 }
 
