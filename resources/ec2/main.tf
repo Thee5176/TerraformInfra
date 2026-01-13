@@ -25,36 +25,32 @@ resource "aws_instance" "web_server" {
   associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.ec2_ssm_profile.name
 
-  user_data_base64 = base64encode(<<-EOF
+  user_data_base64 = base64encode(<<EOF
     #!/bin/bash
     set -e  # Exit on any error
-    
-    exec > /tmp/user_data.log 2>&1  # Capture all output to log file
-    echo "=== Starting user_data script ===" 
     
     echo "=== Updating system ===" 
     apt-get update -y
     apt-get install -y git
     
-    echo "=== Attempting to install SSM Agent ===" 
-    apt-get install -y amazon-ssm-agent || echo "SSM Agent not available in this region/architecture, skipping"
-    
-    echo "=== Starting SSM Agent if available ===" 
-    systemctl start amazon-ssm-agent 2>/dev/null || echo "SSM Agent service not available"
-    systemctl enable amazon-ssm-agent 2>/dev/null || echo "SSM Agent service not available"
-    
-    echo "=== Installing Docker ===" 
-    curl -fsSL https://get.docker.com | sh
+    echo "=== Installing Docker from Official Repository ===" 
+    sudo apt update
+    sudo apt install ca-certificates curl
+    sudo install -m 0755 -d /etc/apt/keyrings
+    sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+    sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+    echo "=== Adding ubuntu user to docker group ===" 
     usermod -aG docker ubuntu
+    
+    echo "=== Reloading systemd and restarting Docker ===" 
+    sudo systemctl start docker
+    sudo systemctl status docker
 
     echo "=== Installing Docker Compose ===" 
     curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
     chmod +x /usr/local/bin/docker-compose
-    ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
-
-    echo "=== Starting Docker service ===" 
-    systemctl start docker
-    systemctl enable docker
+    ln -sf /usr/local/bin/docker-compose /usr/bin/docker-compose
 
     echo "=== Verifying installations ===" 
     git --version
@@ -63,7 +59,7 @@ resource "aws_instance" "web_server" {
 
     echo "=== Cloning repository ===" 
     cd /home/ubuntu
-    sudo -u ubuntu git clone --recurse-submodules -j3 https://github.com/Thee5176/Accounting_CQRS_Project.git
+    git clone --recurse-submodules -j3 https://github.com/Thee5176/Accounting_CQRS_Project.git
     
     echo "=== User data script completed successfully ===" 
   EOF
