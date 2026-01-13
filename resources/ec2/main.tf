@@ -75,14 +75,16 @@ resource "aws_security_group" "web_sg" {
     from_port        = 22
     to_port          = 22
     protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
 
   ingress {
     description      = "HTTP from anywhere"
     from_port        = 80
-    to_port          = 80 # Frontend Port
+    to_port          = 80
     protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
   
@@ -91,6 +93,7 @@ resource "aws_security_group" "web_sg" {
     from_port        = var.command_service_port
     to_port          = var.query_service_port
     protocol         = "tcp"
+    cidr_blocks      = ["0.0.0.0/0"]
     ipv6_cidr_blocks = ["::/0"]
   }
   egress {
@@ -98,6 +101,7 @@ resource "aws_security_group" "web_sg" {
     to_port          = 0
     protocol         = "-1"
     cidr_blocks      = ["0.0.0.0/0"]
+    ipv6_cidr_blocks = ["::/0"]
   }
 }
 
