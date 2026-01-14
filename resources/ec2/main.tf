@@ -13,35 +13,40 @@ resource "aws_instance" "web_server" {
     #!/bin/bash
     set -e  # Exit on any error
     
+    # Log everything to file for debugging
+    exec > >(tee /var/log/user-data.log)
+    exec 2>&1
+    
+    echo "=== Starting user-data script at $(date) ===" 
+    
     echo "=== Updating system ===" 
     apt-get update -y
-    apt-get install -y git
-
+    apt-get install -y git curl
+    
+    echo "=== Installing Docker ===" 
     curl -fsSL https://get.docker.com | sh
-    apt-get install -y docker
-    sudo addgroup docker
+    apt-get install -y docker-compose-plugin
+    
+    echo "=== Adding ubuntu user to docker group ===" 
     usermod -aG docker ubuntu
-    systemctl enable docker
-    systemctl start docker
-    apt-get -y install docker-compose-plugin
     
     echo "=== Enabling and starting Docker service ==="
-    sudo systemctl enable docker
-    sudo systemctl start docker
-    sudo systemctl status docker
-
+    systemctl enable docker
+    systemctl start docker
+    systemctl status docker
+    
     echo "=== Verifying installations ===" 
     git --version
     docker --version
-    docker-compose --version
-
-    echo "=== Cloning repository ===" 
-    cd /home/ubuntu
-    git clone --recurse-submodules -j3 https://github.com/Thee5176/Accounting_CQRS_Project.git
+    docker compose version
     
-    set +e  # Disable exit on error for the next commands
-
-    echo "=== User data script completed successfully ===" 
+    echo "=== Cloning repository to /home/ubuntu ===" 
+    cd /home/ubuntu
+    sudo -u ubuntu git clone --recurse-submodules -j3 https://github.com/Thee5176/Accounting_CQRS_Project.git
+    chown -R ubuntu:ubuntu /home/ubuntu/Accounting_CQRS_Project
+    
+    echo "=== User data script completed successfully at $(date) ===" 
+    echo "=== Check logs at: /var/log/user-data.log ==="
     EOF
   )
 
