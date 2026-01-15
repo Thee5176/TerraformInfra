@@ -13,6 +13,10 @@ variable "ec2_instance_type" {
   type        = string
 }
 
+variable "ec2_ami_id" {
+  description = "AMI ID for the EC2 instance"
+  type        = string
+}
 variable "command_service_port" {
   description = "Port for the Command Service"
   type        = number

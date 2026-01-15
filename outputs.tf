@@ -1,6 +1,7 @@
 output "ec2_instance_public_ip" {
   description = "EC2 public IP address (from ec2 module)"
-  value       = module.ec2.ec2_public_ip
+  value       = module.ec2.ec2_ipv6_address
+  sensitive   = true
 }
 
 # output "rds_endpoint" {

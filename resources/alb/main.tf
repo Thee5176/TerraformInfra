@@ -76,8 +76,7 @@ resource "aws_lb_listener" "alb_listener_http_redirect" {
   protocol          = "HTTP"
 
   default_action {
-    type = "forward"
-    target_group_arn = aws_lb_target_group.backend_target_group.arn
+    type = "redirect"
 
     redirect {
       port        = "443"
@@ -120,11 +119,11 @@ resource "aws_lb_target_group" "command_api_tg" {
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   health_check {
-    path                = "/health"
+    path                = "/command/health"
     healthy_threshold   = 2
     unhealthy_threshold = 2
     timeout             = 5
-    interval            = 30
+    interval            = 300
     matcher             = "200-399"
   }
   tags = {
@@ -146,11 +145,11 @@ resource "aws_lb_target_group" "query_api_tg" {
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
   health_check {
-    path                = "/health"
+    path                = "/query/health"
     healthy_threshold   = 2
     unhealthy_threshold = 2
     timeout             = 5
-    interval            = 30
+    interval            = 300
     matcher             = "200-399"
   }
   tags = {
