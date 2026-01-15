@@ -6,7 +6,7 @@ resource "github_repository_environment" "repo_env" {
   repository  = data.github_repository.repo.name
   environment = "Development"
 }
-
+# -----------Environment Secret---------
 # EC2 Public IP
 resource "github_actions_environment_variable" "ec2_public_ip" {
   repository    = data.github_repository.repo.name
